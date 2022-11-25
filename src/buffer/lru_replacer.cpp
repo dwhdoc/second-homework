@@ -21,15 +21,15 @@ template <typename T> LRUReplacer<T>::~LRUReplacer() {}
 template <typename T> void LRUReplacer<T>::Insert(const T &value) {
   lock_guard<mutex> lck(latch);
   shared_ptr<Node> current;
-  if (map.find(value) != map.end()) {
-      current = map[value];
-      shared_ptr<Node> pre = current->prev;
-      shared_ptr<Node> suc = current->next;
-      pre->next = suc;
-      suc->prev = pre;
+   if (map.find(value) == map.end()) {
+      current = make_shared<Node>(value);
   } else
       {
-          current = make_shared<Node>(value);
+          current = map[value];
+          shared_ptr<Node> pre = current->prev;
+          shared_ptr<Node> suc = current->next;
+          pre->next = suc;
+          suc->prev = pre;
   }
   shared_ptr<Node> fir = head->next;
         current->next = fir;

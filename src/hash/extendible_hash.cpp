@@ -46,7 +46,8 @@ namespace scudb {
         //lock_guard<mutex> lck2(latch);
         if (buckets[bucket_id]) {
             lock_guard<mutex> lck(buckets[bucket_id]->latch);
-            if (buckets[bucket_id]->kmap.size() == 0) return -1;
+            if (buckets[bucket_id]->kmap.size() == 0)
+                return -1;
             return buckets[bucket_id]->localDepth;
         }
         return -1;

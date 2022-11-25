@@ -48,12 +48,14 @@ template <typename T> bool LRUReplacer<T>::Victim(T &value) {
   if (map.empty()) {
     return false;
   }
-  shared_ptr<Node> last = tail->prev;
-  tail->prev = last->prev;
-  last->prev->next = tail;
-  value = last->val;
-  map.erase(last->val);
-  return true;
+  else{
+    shared_ptr<Node> last = tail->prev;
+    tail->prev = last->prev;
+    last->prev->next = tail;
+    value = last->val;
+    map.erase(last->val);
+    return true;
+  }
 }
 
 /*
@@ -62,12 +64,14 @@ template <typename T> bool LRUReplacer<T>::Victim(T &value) {
  */
 template <typename T> bool LRUReplacer<T>::Erase(const T &value) {
   lock_guard<mutex> lck(latch);
-  if (map.find(value) != map.end()) {
-    shared_ptr<Node> current = map[value];
+  if (map.find(value) == map.end()) {
+      return map.erase(value);
+  }
+  else{
+      shared_ptr<Node> current = map[value];
       current->prev->next = current->next;
       current->next->prev = current->prev;
   }
-  return map.erase(value);
 }
 
 template <typename T> size_t LRUReplacer<T>::Size() {

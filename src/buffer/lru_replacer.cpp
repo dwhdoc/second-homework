@@ -33,11 +33,11 @@ template <typename T> void LRUReplacer<T>::Insert(const T &value) {
   }
   shared_ptr<Node> fir = head->next;
         current->next = fir;
-  fir->prev = current;
+        fir->prev = current;
         current->prev = head;
-  head->next = current;
-  map[value] = current;
-  return;
+        head->next = current;
+        map[value] = current;
+        return;
 }
 
 /* If LRU is non-empty, pop the head member from LRU to argument "value", and

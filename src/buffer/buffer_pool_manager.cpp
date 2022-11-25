@@ -49,22 +49,22 @@ BufferPoolManager::~BufferPoolManager() {
 Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   lock_guard<mutex> lck(latch_);
   Page *target = nullptr;
-  if (page_table_->Find(page_id,target)) { //1.1
+  if (page_table_->Find(page_id,target)) { 
       target->pin_count_++;
     replacer_->Erase(target);
-    return target;
+    return target;//if exist, pin the page and return immediately
   }
-  //1.2
+  //if no exist, find a replacement entry from either free list or lru replacer. (NOTE: always find from free list first)
         target = GetVictimPage();
   if (target == nullptr) return target;
-  //2
+  //If the entry chosen for replacement is dirty, write it back to disk.
   if (target->is_dirty_) {
     disk_manager_->WritePage(target->GetPageId(),target->data_);
   }
-  //3
+  //Delete the entry for the old page from the hash table and insert an entry for the new page.
   page_table_->Remove(target->GetPageId());
   page_table_->Insert(page_id,target);
-  //4
+  //Update page metadata, read page content from disk file and return page pointer
   disk_manager_->ReadPage(page_id,target->data_);
         target->pin_count_ = 1;
         target->is_dirty_ = false;
@@ -111,6 +111,8 @@ bool BufferPoolManager::FlushPage(page_id_t page_id) {
   if (target == nullptr || target->page_id_ == INVALID_PAGE_ID) {
     return false;
   }
+    //looking for page
+    
   if (target->is_dirty_) {
     disk_manager_->WritePage(page_id,target->GetData());
       target->is_dirty_ = false;
@@ -160,15 +162,13 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   if (target == nullptr) return target;
 
   page_id = disk_manager_->AllocatePage();
-  //2
+  
   if (target->is_dirty_) {
     disk_manager_->WritePage(target->GetPageId(),target->data_);
   }
-  //3
   page_table_->Remove(target->GetPageId());
   page_table_->Insert(page_id,target);
 
-  //4
         target->page_id_ = page_id;
         target->ResetMemory();
         target->is_dirty_ = false;
@@ -193,4 +193,4 @@ Page *BufferPoolManager::GetVictimPage() {
   return target;
 }
 
-} // namespace cmudb
+} // namespace scudb
